@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function broadcastFileListUpdate() {
         let combinedFiles = [...allDiscoveredFiles];
         if (typeof REFERENCE_DOCUMENTS !== 'undefined') {
-            const refs = REFERENCE_DOCUMENTS.map(d => ({ name: d.title, url: d.url }));
+            const refs = REFERENCE_DOCUMENTS.map(d => ({ name: d.title, url: d.url, group: 'Tài liệu tham khảo' }));
             combinedFiles = [...combinedFiles, ...refs];
         }
 
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function sendGhostMessage(url) {
         let combinedFiles = [...allDiscoveredFiles];
         if (typeof REFERENCE_DOCUMENTS !== 'undefined') {
-            const refs = REFERENCE_DOCUMENTS.map(d => ({ name: d.title, url: d.url }));
+            const refs = REFERENCE_DOCUMENTS.map(d => ({ name: d.title, url: d.url, group: 'Tài liệu tham khảo' }));
             combinedFiles = [...combinedFiles, ...refs];
         }
 
@@ -133,10 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPdfUrl) openQuickView(currentPdfUrl);
     });
 
-    const ghostViewMainBtn = document.getElementById('ghost-view-main');
-    ghostViewMainBtn.addEventListener('click', () => {
-        if (currentPdfUrl) sendGhostMessage(currentPdfUrl);
-    });
+    // Tính năng "Hiện lên web" (Ghost View) tạm ẩn trên tab Hồ sơ
+    // const ghostViewMainBtn = document.getElementById('ghost-view-main');
+    // ghostViewMainBtn.addEventListener('click', () => {
+    //     if (currentPdfUrl) sendGhostMessage(currentPdfUrl);
+    // });
 
     // ===================================================================
     // DỮ LIỆU GHI CHÚ QUỐC GIA
@@ -159,6 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdownFileMap = new Map();
     let dropdownFileCount = 0;
     let allDiscoveredFiles = [];
+
+    // ===================================================================
+    // NHÓM HỒ SƠ (Lần đầu / Bổ sung lần N...) - hiển thị trực quan
+    // ===================================================================
+    const GROUP_COLORS = ['#007bff', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'];
+    const groupColorMap = new Map();
+    let dropdownGroupMap = new Map();
+    let lastFileGroup = undefined; // undefined = chưa vẽ header nào
+
+    function getGroupColor(group) {
+        if (!group) return '#6c757d';
+        if (!groupColorMap.has(group)) {
+            groupColorMap.set(group, GROUP_COLORS[groupColorMap.size % GROUP_COLORS.length]);
+        }
+        return groupColorMap.get(group);
+    }
 
     fileDropdown.addEventListener('change', (e) => {
         const selectedIndex = e.target.value;
@@ -456,12 +473,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addFileToListUI(file) {
+        const group = file.group || null;
+        const groupColor = getGroupColor(group);
+
+        // Vẽ header nhóm mỗi khi nhóm hồ sơ thay đổi so với file trước đó
+        if (group !== lastFileGroup) {
+            const headerLi = document.createElement('li');
+            headerLi.className = 'file-group-header';
+            headerLi.style.setProperty('--group-color', groupColor);
+            headerLi.textContent = group ? `📁 ${group}` : '📁 Khác';
+            fileListEl.appendChild(headerLi);
+            lastFileGroup = group;
+        }
+
         const li = document.createElement('li');
         li.textContent = `📄 ${file.name}`;
         li.title = `Mở file: ${file.name}`;
-        li.classList.add('clickable');
+        li.classList.add('clickable', 'has-group');
         li.dataset.fileUrl = file.url;
-        
+        li.style.setProperty('--group-color', groupColor);
+
         li.addEventListener('click', () => {
             const fileUrl = li.dataset.fileUrl;
             loadPDFInViewer(fileUrl);
@@ -470,14 +501,28 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             li.classList.add('viewing');
         });
-        
+
         fileListEl.appendChild(li);
-        
+
         dropdownFileCount++;
         const option = document.createElement('option');
         option.value = dropdownFileCount;
         option.textContent = `📄 ${file.name}`;
-        fileDropdown.appendChild(option);
+
+        // Gộp option vào optgroup theo nhóm hồ sơ để dropdown cũng trực quan
+        const groupKey = group || '__none__';
+        let optgroupEl = dropdownGroupMap.get(groupKey);
+        if (!optgroupEl) {
+            if (group) {
+                optgroupEl = document.createElement('optgroup');
+                optgroupEl.label = group;
+                fileDropdown.appendChild(optgroupEl);
+            } else {
+                optgroupEl = fileDropdown;
+            }
+            dropdownGroupMap.set(groupKey, optgroupEl);
+        }
+        optgroupEl.appendChild(option);
         dropdownFileMap.set(dropdownFileCount.toString(), file.url);
     }
 
@@ -652,7 +697,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dropdownFileMap.clear();
                 dropdownFileCount = 0;
                 allDiscoveredFiles = [];
-                
+                groupColorMap.clear();
+                dropdownGroupMap.clear();
+                lastFileGroup = undefined;
+
                 pdfViewer.container.style.display = 'none';
                 pdfViewer.cache = [];
                 pdfViewer.frames.forEach(frame => {
@@ -669,12 +717,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorCount = 0;
                 pdfWindowId = null;
                 allDiscoveredFiles = [];
-                
+
                 fileDropdown.innerHTML = '<option value="">-- Chọn tài liệu để xem --</option>';
                 dropdownFileMap.clear();
                 dropdownFileCount = 0;
+                groupColorMap.clear();
+                dropdownGroupMap.clear();
+                lastFileGroup = undefined;
                 break;
-                
+
             case 'PROCESS_TOTAL':
                 totalFiles = message.total;
                 updateStatus();
@@ -684,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 foundCount++;
                 
                 // Lưu vào danh sách
-                const newFile = { name: message.file.name, url: message.file.url };
+                const newFile = { name: message.file.name, url: message.file.url, group: message.file.group || null };
                 allDiscoveredFiles.push(newFile);
                 broadcastFileListUpdate();
                 saveSessionData(); // Lưu vào bộ nhớ phiên ngay lập tức
@@ -831,8 +882,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // TÍNH NĂNG ĐÁNH GIÁ HỒ SƠ
+    // TÍNH NĂNG ĐÁNH GIÁ HỒ SƠ - tab "Đánh giá" tạm ẩn, nên comment toàn bộ khối này
     // ===================================================================
+    /*
     const sendForReviewBtn = document.getElementById('send-for-review-btn');
     const reviewLoading = document.getElementById('review-loading');
     const reviewProgress = document.getElementById('review-progress');
@@ -970,6 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
         overallConclusion.textContent = data.conclusion || 'Không có kết luận chung.';
         reviewResultsContainer.style.display = 'block';
     }
+    */
 
     initializeNoteFeature();
 });

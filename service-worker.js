@@ -52,8 +52,26 @@ function getPdfLinksAndNames() {
             return;
         }
 
+        // Xác định nhóm hồ sơ (VD: "Lần đầu", "Bổ sung lần 1") mà nút "Xem" thuộc về,
+        // dựa trên tên hiển thị trên nút dropdown-toggle của khối hoso chứa nó.
+        function getGroupName(btn) {
+            const groupEl = btn.closest('[ng-repeat="hoso in vm.listTepHoSo"]');
+            if (!groupEl) return null;
+
+            const toggleBtn = groupEl.querySelector(':scope > button.dropdown-toggle, :scope > button[id^="button"]');
+            if (!toggleBtn) return null;
+
+            let text = '';
+            toggleBtn.childNodes.forEach((node) => {
+                if (node.nodeType === Node.TEXT_NODE) text += node.textContent;
+            });
+            text = text.trim().replace(/\s+/g, ' ');
+            return text || null;
+        }
+
         foundButtons.forEach((btn) => {
             const row = btn.closest('tr');
+            const group = getGroupName(btn);
             let cleanName = null;
 
             if (row) {
@@ -74,7 +92,7 @@ function getPdfLinksAndNames() {
             }
 
             if (cleanName) {
-                filesToProcess.push({ button: btn, name: cleanName });
+                filesToProcess.push({ button: btn, name: cleanName, group });
             }
         });
 
@@ -125,7 +143,7 @@ function getPdfLinksAndNames() {
                         }
 
                         if (!foundFiles.some(f => f.url === finalUrl)) {
-                            const newFile = { url: finalUrl, name: item.name };
+                            const newFile = { url: finalUrl, name: item.name, group: item.group };
                             foundFiles.push(newFile);
                             chrome.runtime.sendMessage({ type: 'FILE_FOUND', file: newFile });
                         }

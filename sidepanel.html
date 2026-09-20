@@ -184,6 +184,24 @@
         li.viewing { background-color: #d4edff !important; border-color: #007bff !important; font-weight: 600; }
         #status { font-style: italic; color: #555; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
 
+        /* === NHÓM HỒ SƠ (Lần đầu / Bổ sung lần N...) === */
+        li.file-group-header {
+            background-color: #f1f3f5;
+            color: #495057;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 6px 10px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            border-left: 4px solid var(--group-color, #6c757d);
+            border-radius: 4px;
+        }
+        li.file-group-header:first-child { margin-top: 0; }
+        li.clickable.has-group { border-left: 4px solid var(--group-color, #6c757d); padding-left: 10px; }
+        #file-dropdown optgroup { font-weight: 700; color: #495057; font-style: normal; }
+
         /* === TOOLTIP === */
         .note-container {
             position: relative;
@@ -360,7 +378,9 @@
         <button class="tab-button" data-tab="ghichu">Ghi chú</button>
         <button class="tab-button" data-tab="timkiem">Tìm kiếm</button>
         <button class="tab-button" data-tab="tailieu">Tài liệu</button>
+        <!-- Tab "Đánh giá" tạm ẩn
         <button class="tab-button" data-tab="danhgia">Đánh giá</button>
+        -->
     </div>
 
     <!-- Tab Content: Hồ sơ -->
@@ -377,7 +397,9 @@
         <div id="pdf-viewer-container">
             <div class="viewer-controls">
                 <button class="quick-view-btn" id="quick-view-main">🔍 Xem nhanh</button>
+                <!-- Tính năng "Hiện lên web" (Ghost View) tạm ẩn
                 <button class="quick-view-btn" id="ghost-view-main" style="background-color: #6f42c1; margin-left: 5px;">👻 Hiện lên web</button>
+                -->
             </div>
             <div id="pdf-viewer-wrapper">
                 <iframe class="pdf-frame"></iframe>
@@ -389,17 +411,20 @@
             <div id="resize-grip">⋮⋮ Kéo để thay đổi chiều cao</div>
         </div>
 
-        <h3 class="document-list-heading">
-            Danh mục tài liệu
-            <span class="document-list-tooltip">Lần đầu đánh giá: 
+        <!-- Đã ẩn danh mục tài liệu dạng danh sách vì đã có dropdown "Chọn tài liệu" ở trên -->
+        <div id="file-list-section" style="display: none;">
+            <h3 class="document-list-heading">
+                Danh mục tài liệu
+                <span class="document-list-tooltip">Lần đầu đánh giá:
 1. Công nhận, thừa nhận: Đơn đề nghị + Giấy GMP/GPSX/BCTT
 2. Thẩm định hồ sơ: Đơn đề nghị + Giấy GMP/GPSX + BCTT gần nhất (nước sở tại) + SMF + Danh mục 3 năm + Giấy GMP và BCTT SRA (nếu có)
 Tái đánh giá:
 1. Công nhận, thừa nhận: Đơn đề nghị + Giấy GMP/GPSX/BCTT gần nhất + SMF (nếu có thay đổi)
 2. Thẩm định hồ sơ: Đơn đăng ký + Giấy GMP/GPSX và BCTT gần nhất + SMF (nếu có thay đổi)</span>
-        </h3>
-        <p id="status">Đang chờ tín hiệu...</p>
-        <ul id="file-list"></ul>
+            </h3>
+            <p id="status">Đang chờ tín hiệu...</p>
+            <ul id="file-list"></ul>
+        </div>
     </div>
 
     <!-- Tab Content: Ghi chú -->
@@ -490,14 +515,14 @@ Tái đánh giá:
         </div>
     </div>
 
-    <!-- Tab Content: Đánh giá -->
+    <!-- Tab Content: Đánh giá - tạm ẩn
     <div class="tab-content" id="tab-danhgia">
         <div style="margin-bottom: 15px;">
             <button id="send-for-review-btn" style="width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
                 🚀 Gửi hồ sơ để đánh giá
             </button>
         </div>
-        
+
         <div id="review-loading" style="display: none; text-align: center; padding: 20px;">
             <div style="margin-bottom: 10px;">🔄 Đang xử lý tài liệu...</div>
             <div id="review-progress" style="font-size: 12px; color: #666;"></div>
@@ -508,13 +533,14 @@ Tái đánh giá:
             <div id="review-list">
                 <!-- Row template -->
             </div>
-            
+
             <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                 <div style="font-weight: bold; margin-bottom: 5px; color: #333;">Kết luận chung:</div>
                 <div id="review-overall-conclusion" style="line-height: 1.4;"></div>
             </div>
         </div>
     </div>
+    -->
 
     <style>
         .review-row {

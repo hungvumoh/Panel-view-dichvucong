@@ -267,12 +267,24 @@
         if (!fileSelector) return;
         const currentVal = selectedUrl || fileSelector.value;
         fileSelector.innerHTML = '';
+
+        // Nhóm các file theo hồ sơ (VD: "Lần đầu" / "Bổ sung lần 1") để dễ phân biệt
+        const optgroupMap = new Map();
         list.forEach(file => {
+            const groupName = file.group || 'Khác';
+            let optgroupEl = optgroupMap.get(groupName);
+            if (!optgroupEl) {
+                optgroupEl = document.createElement('optgroup');
+                optgroupEl.label = groupName;
+                fileSelector.appendChild(optgroupEl);
+                optgroupMap.set(groupName, optgroupEl);
+            }
+
             const option = document.createElement('option');
             option.value = file.url;
             option.textContent = file.name;
             if (file.url === currentVal) option.selected = true;
-            fileSelector.appendChild(option);
+            optgroupEl.appendChild(option);
         });
     }
 })();
